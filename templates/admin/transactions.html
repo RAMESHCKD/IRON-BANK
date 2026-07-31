@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}System Transactions Audit Trail{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('admin.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <span><i class="fa-solid fa-file-invoice-dollar text-gold"></i> Core Transactions Audit Logs</span>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span class="badge badge-admin">Master Ledger</span>
+            {% if transactions %}
+            <form action="{{ url_for('admin.clear_logs') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear all transaction audit logs? This action cannot be undone.');" style="display: inline;">
+                <button type="submit" class="btn-outline btn-sm" style="border-color: var(--danger); color: var(--danger); font-size: 0.75rem; padding: 0.25rem 0.5rem; background: none; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <i class="fa-solid fa-trash-can"></i> Clear Logs
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if transactions %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp (IST)</th>
+                    <th>Account No.</th>
+                    <th>Customer Name</th>
+                    <th>Operation Type</th>
+                    <th>Transaction Amount</th>
+                    <th>Updated Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ (tx.date_time|local_datetime).strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td><strong class="text-accent">{{ tx.account_number }}</strong></td>
+                    <td>{{ cust_map.get(tx.account_number, 'Unknown Account') }}</td>
+                    <td>
+                        <span class="badge {% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}badge-deposit{% else %}badge-withdraw{% endif %}">
+                            {{ tx.transaction_type }}
+                        </span>
+                    </td>
+                    <td><strong class="{% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}text-accent{% else %}text-gold{% endif %}">₹{{ "%.2f"|format(tx.amount) }}</strong></td>
+                    <td><strong>₹{{ "%.2f"|format(tx.balance_after_transaction) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-center text-muted" style="padding: 2rem 0;">No logs or transaction movements detected in database.</p>
+    {% endif %}
+</div>
+{% endblock %}

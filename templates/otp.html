@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Security OTP{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo"><i class="fa-solid fa-shield-halved text-accent"></i> SECURITY</div>
+            <div class="auth-subtitle">Two-Factor Authentication</div>
+        </div>
+        
+        <p style="font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">
+            A 6-digit verification code has been dispatched to: <br>
+            <strong class="text-accent">{{ email }}</strong>
+        </p>
+        
+        <form action="{{ url_for('auth.verify_otp') }}" method="POST">
+            <div class="form-group">
+                <label for="otp" class="form-label">ONE-TIME PASSWORD (OTP)</label>
+                <input type="text" id="otp" name="otp" class="form-control numeric-only" 
+                       placeholder="Enter 6-digit OTP" minlength="6" maxlength="6" required autofocus 
+                       style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; font-weight: bold;">
+            </div>
+            
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-lock-open"></i> Authenticate & Login
+                </button>
+            </div>
+        </form>
+        
+        <form action="{{ url_for('auth.resend_otp') }}" method="POST" style="margin-top: 1rem; text-align: center;">
+            <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Didn't receive the email code? 
+                <button type="submit" style="background: none; border: none; color: var(--accent); cursor: pointer; text-decoration: underline; font-family: inherit; font-size: 0.8rem;">
+                    Resend OTP
+                </button>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

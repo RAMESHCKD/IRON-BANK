@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Management{% endblock %}
+
+{% block extra_head %}
+<style>
+    .tab-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .tab-button {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .tab-button.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+
+    .tab-panel {
+        display: none;
+    }
+
+    .tab-panel.active {
+        display: block;
+    }
+
+    .txn-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .txn-toolbar-left,
+    .txn-toolbar-right {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .txn-view-btn,
+    .filter-btn,
+    .download-btn,
+    .download-menu button {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: var(--text-primary);
+        border-radius: 8px;
+        padding: 0.6rem 0.85rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .txn-view-btn.active,
+    .filter-btn.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+
+    .filter-panel,
+    .download-menu {
+        display: none;
+    }
+
+    .filter-panel.open {
+        display: block;
+    }
+
+    .filter-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .table td,
+    .table th {
+        white-space: nowrap;
+    }
+
+    .download-menu {
+        position: relative;
+        width: 180px;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .download-menu.open {
+        display: block;
+    }
+
+    .download-menu button {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 0.5rem;
+    }
+
+    .download-menu button:last-child {
+        margin-bottom: 0;
+    }
+
+    .customer-page-header {
+        gap: 1.5rem;
+    }
+
+    .customer-page-header-copy {
+        min-width: 0;
+    }
+
+    .customer-page-header-copy h2 {
+        margin-bottom: 0.35rem;
+    }
+
+    .customer-page-header-copy p {
+        margin-bottom: 0;
+    }
+
+    .customer-header-actions {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .customer-header-actions a {
+        display: inline-flex;
+        width: auto;
+        min-height: 2.5rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+        .customer-page-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .customer-header-actions {
+            width: 100%;
+        }
+
+        .customer-header-actions a {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customer-page-header mb-2 d-flex justify-between align-center">
+    <div class="customer-page-header-copy">
+        <h2>Customer Management</h2>
+        <p class="text-secondary">Lookup customer accounts, view balances, manage cheque requests, and update KYC.</p>
+    </div>
+    <div class="customer-header-actions">
+        <a href="{{ url_for('admin.add_customer') }}" class="btn-primary btn-sm">
+            <i class="fa-solid fa-user-plus"></i> Add New Customer
+        </a>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn-outline btn-sm">
+            <i class="fa-solid fa-gauge"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-search text-accent"></i> Customer Lookup</span>
+            <span class="badge badge-customer">{{ total_customers }} Customers</span>
+        </div>
+        <form action="{{ url_for('admin.customers') }}" method="POST" class="form-grid" style="grid-template-columns: 1fr auto; align-items: end;">
+            <input type="hidden" name="action" value="lookup_customer">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="account_number" class="form-label">Account No. / User ID</label>
+                <input type="text" id="account_number" name="account_number" class="form-control" placeholder="Enter account number or user ID" value="{{ selected_account }}">
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 0.7rem 1rem;">Lookup Customer</button>
+        </form>
+    </div>
+
+    {% if selected_customer %}
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-wallet text-accent"></i> Customer Profile</span>
+        </div>
+
+        <div class="tab-bar" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0;">
+            <button type="button" class="tab-button {% if active_tab == 'summary' %}active{% endif %}" data-target="summary-tab">Customer Summary</button>
+            <button type="button" class="tab-button {% if active_tab == 'transactions' %}active{% endif %}" data-target="transactions-tab">Transactions &amp; Statements</button>
+            <button type="button" class="tab-button {% if active_tab == 'cheque' %}active{% endif %}" data-target="cheque-tab">Cheque Section</button>
+            <button type="button" class="tab-button {% if active_tab == 'kyc' %}active{% endif %}" data-target="kyc-tab">KYC / C-KYC</button>
+        </div>
+
+        <div class="tab-panel {% if active_tab == 'summary' %}active{% endif %}" id="summary-tab">
+            <div class="form-group">
+                <label class="form-label">Customer Name</label>
+                <div class="text-primary" style="font-weight: 600;">{{ selected_customer.name }}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Account Number</label>
+                <div class="text-primary" style="font-weight: 600;">{{ selected_customer.account_number }}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Current Balance</label>
+                <div class="text-accent" style="font-weight: 700; font-size: 1.2rem;">₹{{ "%.2f"|format(selected_customer.balance) }}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">KYC Status</label>
+                <div class="badge {% if selected_customer.kyc_status == 'Approved' %}badge-success{% elif selected_customer.kyc_status == 'Rejected' %}badge-danger{% else %}badge-warning{% endif %}" style="display: inline-block;">
+                    {{ selected_customer.kyc_status or 'Pending' }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone / Email</label>
+                <div>{{ selected_customer.phone or '-' }} / {{ selected_customer.email }}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <div>{{ selected_customer.address or '-' }}</div>
+            </div>
+        </div>
+
+        <div class="tab-panel {% if active_tab == 'transactions' %}active{% endif %}" id="transactions-tab">
+            <div class="card" style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem; background: rgba(255,255,255,0.02);">
+                <div class="card-title" style="padding-bottom: 0.5rem;">
+                    <span><i class="fa-solid fa-receipt text-accent"></i> Transactions &amp; Statements</span>
+                </div>
+
+                <div class="txn-toolbar">
+                    <div class="txn-toolbar-left">
+                        <button type="button" class="txn-view-btn active" data-view="recent">Recent 5</button>
+                        <button type="button" class="txn-view-btn" data-view="passbook">Passbook</button>
+                    </div>
+
+                    <div class="txn-toolbar-right">
+                        <button type="button" class="filter-btn" id="filter-toggle-btn">Filter</button>
+                        <button type="button" class="download-btn" id="download-pdf-btn"><i class="fa-solid fa-file-pdf"></i> Account Statement</button>
+                    </div>
+                </div>
+
+                <div class="filter-panel" id="filter-panel">
+                    <div class="filter-inline">
+                        <div class="form-group" style="margin-bottom: 0; min-width: 180px;">
+                            <label for="from-date" class="form-label">From Date</label>
+                            <input type="date" id="from-date" class="form-control">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0; min-width: 180px;">
+                            <label for="to-date" class="form-label">To Date</label>
+                            <input type="date" id="to-date" class="form-control">
+                        </div>
+
+                        <button type="button" class="btn-primary" id="apply-filter-btn">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            {% if customer_transactions %}
+            <div class="table-responsive">
+                <table class="table" id="customer-transactions-table">
+                    <thead>
+                        <tr>
+                            <th class="col-date">Date</th>
+                            <th class="col-type">Type</th>
+                            <th class="col-transaction-id">Transaction ID</th>
+                            <th class="col-amount">Amount</th>
+                            <th class="col-debit">Debit</th>
+                            <th class="col-credit">Credit</th>
+                            <th class="col-balance">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in customer_transactions %}
+                        <tr data-date="{{ (tx.date_time|local_datetime).strftime('%Y-%m-%d') }}" data-tx-type="{{ tx.transaction_type }}" data-amount="{{ tx.amount }}" data-balance="{{ tx.balance_after_transaction }}" data-view="all">
+                            <td class="col-date">{{ (tx.date_time|local_datetime).strftime('%d-%m-%Y %H:%M') }}</td>
+                            <td class="col-type">{{ tx.transaction_type }}</td>
+                            <td class="col-transaction-id">{{ tx.id }}</td>
+                            <td class="col-amount">{{ '₹%.2f'|format(tx.amount) if tx.amount is not none else '₹0.00' }}</td>
+                            <td class="col-debit">{% if tx.amount < 0 %}{{ '₹%.2f'|format(tx.amount|abs) }}{% else %}-{% endif %}</td>
+                            <td class="col-credit">{% if tx.amount >= 0 %}{{ '₹%.2f'|format(tx.amount) }}{% else %}-{% endif %}</td>
+                            <td class="col-balance">{{ '₹%.2f'|format(tx.balance_after_transaction) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No transaction records available for this customer yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="tab-panel {% if active_tab == 'cheque' %}active{% endif %}" id="cheque-tab">
+            <div class="card" style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem; background: rgba(255,255,255,0.02);">
+                <div class="card-title">
+                    <span><i class="fa-solid fa-magnifying-glass text-accent"></i> Cheque Lookup</span>
+                </div>
+                <form action="{{ url_for('admin.customers') }}" method="POST" class="form-grid" style="grid-template-columns: 1fr auto; align-items: end;">
+                    <input type="hidden" name="action" value="lookup_cheque">
+                    <input type="hidden" name="account_number" value="{{ selected_customer.account_number }}">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="cheque_number" class="form-label">Cheque Number</label>
+                        <input type="text" id="cheque_number" name="cheque_number" class="form-control" value="{{ cheque_number }}" placeholder="Enter cheque number, e.g. CHQ-1001" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="padding: 0.7rem 1rem;">Look Up Cheque</button>
+                </form>
+            </div>
+
+            {% if selected_cheque %}
+            <div class="card" style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem; background: rgba(255,255,255,0.02);">
+                <div class="card-title">
+                    <span><i class="fa-solid fa-money-check text-accent"></i> Cheque Details</span>
+                    <span class="badge {% if selected_cheque.status == 'Blocked' %}badge-danger{% elif selected_cheque.status == 'Passed' %}badge-success{% elif selected_cheque.status == 'Used' %}badge-warning{% else %}badge-customer{% endif %}">{{ selected_cheque.status }}</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Cheque Number</label>
+                        <div class="text-primary" style="font-weight: 600;">{{ selected_cheque.cheque_number }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Account Number</label>
+                        <div>{{ selected_cheque.account_number }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <div class="text-accent" style="font-weight: 700;">₹{{ "%.2f"|format(selected_cheque.amount or 0) }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Issue Date</label>
+                        <div>{{ (selected_cheque.issue_date|local_datetime).strftime('%d-%m-%Y') if selected_cheque.issue_date else '-' }}</div>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label class="form-label">Remarks</label>
+                        <div>{{ selected_cheque.remarks or '-' }}</div>
+                    </div>
+                </div>
+                {% if selected_cheque.status not in ['Passed', 'Blocked'] %}
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    {% for action, label, button_class in [
+                        ('mark_cheque_passed', 'Mark Passed', 'btn-primary'),
+                        ('block_cheque', 'Block Cheque', 'btn-outline')
+                    ] %}
+                    <form action="{{ url_for('admin.customers') }}" method="POST">
+                        <input type="hidden" name="action" value="{{ action }}">
+                        <input type="hidden" name="account_number" value="{{ selected_customer.account_number }}">
+                        <input type="hidden" name="cheque_number" value="{{ selected_cheque.cheque_number }}">
+                        <button type="submit" class="{{ button_class }}" style="width: auto;">{{ label }}</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% elif cheque_number %}
+            <p class="text-muted">No cheque details found for this lookup.</p>
+            {% endif %}
+
+            <form action="{{ url_for('admin.customers') }}" method="POST">
+                <input type="hidden" name="action" value="{{ 'stop_cheque' if selected_customer.cheque_book_status == 'Requested' else 'apply_cheque' }}">
+                <input type="hidden" name="account_number" value="{{ selected_customer.account_number }}">
+                <div class="form-group">
+                    <label class="form-label">Cheque Book Status</label>
+                    <div class="text-primary" style="font-weight: 600;">{{ selected_customer.cheque_book_status or 'Not Requested' }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cheque Book Request</label>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                        <button type="submit" class="btn-primary" style="width: auto;">
+                            {% if selected_customer.cheque_book_status == 'Requested' %}
+                                Stop Request
+                            {% else %}
+                                Apply for Cheque Book
+                            {% endif %}
+                        </button>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">
+                            {% if selected_customer.cheque_book_status == 'Requested' %}
+                                The cheque book request is currently pending. You can stop it if needed.
+                            {% else %}
+                                Submit a new cheque book request for this customer.
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-panel {% if active_tab == 'kyc' %}active{% endif %}" id="kyc-tab">
+            <form action="{{ url_for('admin.customers') }}" method="POST">
+                <input type="hidden" name="action" value="update_kyc">
+                <input type="hidden" name="account_number" value="{{ selected_customer.account_number }}">
+                <div class="form-group">
+                    <label for="pan_no" class="form-label">PAN Number</label>
+                    <input type="text" id="pan_no" name="pan_no" class="form-control" value="{{ pan_input or selected_customer.pan_no or '' }}" placeholder="ABCDE1234F" maxlength="10" pattern="[A-Za-z]{5}[0-9]{4}[A-Za-z]" title="Enter PAN in the format ABCDE1234F" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" {% if selected_customer.pan_no and selected_customer.kyc_status != 'Rejected' %}readonly{% endif %} required>
+                    {% if selected_customer.pan_no and selected_customer.kyc_status != 'Rejected' %}
+                    <small class="text-muted">PAN is locked while KYC is not rejected.</small>
+                    {% elif selected_customer.kyc_status == 'Rejected' %}
+                    <small class="text-muted">PAN can be corrected because KYC is rejected.</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="kyc_status" class="form-label">KYC Status</label>
+                    <select id="kyc_status" name="kyc_status" class="form-control">
+                        <option value="Pending" {% if selected_customer.kyc_status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Approved" {% if selected_customer.kyc_status == 'Approved' %}selected{% endif %}>Approved</option>
+                        <option value="Rejected" {% if selected_customer.kyc_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AKYC Number</label>
+                    <div class="text-primary" style="font-weight: 600;">{{ selected_customer.akyc_no or 'Generated after valid PAN submission' }}</div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: auto;">{{ 'ReKYC' if selected_customer.kyc_status == 'Approved' else 'Save KYC' }}</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const target = button.dataset.target;
+
+                tabButtons.forEach(function (btn) {
+                    btn.classList.toggle('active', btn === button);
+                });
+
+                tabPanels.forEach(function (panel) {
+                    panel.classList.toggle('active', panel.id === target);
+                });
+            });
+        });
+
+        const transactionRows = document.querySelectorAll('#customer-transactions-table tbody tr');
+        const fromDateInput = document.getElementById('from-date');
+        const toDateInput = document.getElementById('to-date');
+        const viewButtons = document.querySelectorAll('.txn-view-btn');
+        const table = document.getElementById('customer-transactions-table');
+        const filterPanel = document.getElementById('filter-panel');
+        const filterToggleBtn = document.getElementById('filter-toggle-btn');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+        function formatCurrency(value) {
+            const num = Number(value) || 0;
+            return '₹' + num.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function applyTransactionFilters() {
+            if (!table) return;
+
+            const fromVal = fromDateInput ? fromDateInput.value : '';
+            const toVal = toDateInput ? toDateInput.value : '';
+            const activeView = document.querySelector('.txn-view-btn.active')?.dataset.view || 'recent';
+
+            const rows = Array.from(transactionRows);
+
+            rows.forEach(function (row, index) {
+                const rowDate = row.dataset.date;
+                const showByDate = (!fromVal || rowDate >= fromVal) && (!toVal || rowDate <= toVal);
+                let showByView = true;
+
+                if (activeView === 'recent') {
+                    showByView = index < 5;
+                }
+
+                row.style.display = showByDate && showByView ? '' : 'none';
+            });
+        }
+
+        if (filterToggleBtn) {
+            filterToggleBtn.addEventListener('click', function () {
+                filterPanel.classList.toggle('open');
+                filterToggleBtn.classList.toggle('active', filterPanel.classList.contains('open'));
+            });
+        }
+
+        const applyFilterBtn = document.getElementById('apply-filter-btn');
+        if (applyFilterBtn) {
+            applyFilterBtn.addEventListener('click', function () {
+                applyTransactionFilters();
+                filterPanel.classList.remove('open');
+                filterToggleBtn.classList.remove('active');
+            });
+        }
+
+        viewButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                viewButtons.forEach(function (btn) {
+                    btn.classList.toggle('active', btn === button);
+                });
+                applyTransactionFilters();
+            });
+        });
+
+        if (fromDateInput) fromDateInput.addEventListener('change', applyTransactionFilters);
+        if (toDateInput) toDateInput.addEventListener('change', applyTransactionFilters);
+
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', function () {
+                const rows = Array.from(transactionRows).filter(row => row.style.display !== 'none');
+                const title = 'Customer Account Statement';
+                const header = ['Date', 'Type', 'Transaction ID', 'Amount', 'Debit', 'Credit', 'Balance'];
+
+                let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; color: #111;">';
+                tableHtml += '<thead><tr>';
+                header.forEach(function (col) {
+                    tableHtml += '<th style="border: 1px solid #222; padding: 6px 8px; background: #f2f2f2; text-align: left;">' + col + '</th>';
+                });
+                tableHtml += '</tr></thead><tbody>';
+
+                rows.forEach(function (row) {
+                    const cells = row.querySelectorAll('td');
+                    const values = Array.from(cells).map(function (cell) {
+                        return cell.textContent.trim();
+                    });
+                    tableHtml += '<tr>' + values.map(function (val) {
+                        return '<td style="border: 1px solid #222; padding: 6px 8px;">' + val + '</td>';
+                    }).join('') + '</tr>';
+                });
+
+                tableHtml += '</tbody></table>';
+
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(
+                        '<html><head><title>' + title + '</title>' +
+                        '<style>' +
+                        'body { font-family: Arial, sans-serif; margin: 20px; color: #111; }' +
+                        'h2 { font-size: 20px; margin-bottom: 12px; }' +
+                        'table { width: 100%; border-collapse: collapse; }' +
+                        'th, td { border: 1px solid #222; padding: 6px 8px; text-align: left; font-size: 12px; }' +
+                        'th { background: #f2f2f2; }' +
+                        '@media print { body { margin: 0; } }' +
+                        '</style></head><body>' +
+                        '<h2>' + title + '</h2>' +
+                        tableHtml +
+                        '</body></html>'
+                    );
+                    printWindow.document.close();
+                    printWindow.focus();
+                    printWindow.print();
+                }
+            });
+        }
+
+        applyTransactionFilters();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Create Customer Account{% endblock %}
+
+{% block extra_head %}
+<style>
+    .customer-registration-card {
+        width: 100%;
+        max-width: 640px;
+    }
+
+    .customer-registration-form {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+    }
+
+    .customer-registration-form .form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .customer-registration-form .form-grid > div {
+        width: 100%;
+    }
+
+    .customer-registration-form h4 {
+        text-align: center;
+    }
+
+    .customer-registration-actions {
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('admin.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="auth-wrapper" style="min-height: auto; padding: 1rem 0;">
+    <div class="card customer-registration-card">
+        <div class="card-title">
+            <span><i class="fa-solid fa-user-plus text-accent"></i> Create New Customer Profile</span>
+            <small class="text-muted">Account Number Auto-Generated</small>
+        </div>
+        
+        <form action="{{ url_for('admin.add_customer') }}" method="POST" class="customer-registration-form">
+            <div class="form-grid">
+                <!-- Column 1: Personal info -->
+                <div>
+                    <h4 class="mb-1" style="color: var(--accent); font-size: 0.9rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Personal Information</h4>
+                    
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Enter Full Name" minlength="2" maxlength="100" pattern="[A-Za-z][A-Za-z .'-]{1,99}" title="Use letters, spaces, apostrophes, or hyphens" required autofocus>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control numeric-only" placeholder="e.g. 9876543210" inputmode="numeric" minlength="10" maxlength="10" pattern="[6-9][0-9]{9}" title="Enter a valid 10-digit mobile number" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="customer@email.com" maxlength="100" autocomplete="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pan_no" class="form-label">PAN Card Number</label>
+                        <input type="text" id="pan_no" name="pan_no" class="form-control" placeholder="ABCDE1234F" maxlength="10" pattern="[A-Za-z]{5}[0-9]{4}[A-Za-z]" title="Enter PAN in the format ABCDE1234F" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address" class="form-label">Residential Address</label>
+                        <textarea id="address" name="address" class="form-control" rows="3" minlength="5" maxlength="200" placeholder="Enter Street, City, ZIP Code" style="resize: none;" required></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group customer-registration-actions">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn-outline" style="border-color: var(--text-muted); color: var(--text-muted);">Cancel</a>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0.75rem 2rem;">
+                    <i class="fa-solid fa-circle-check"></i> Register Customer Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Withdraw Funds{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('admin.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="auth-wrapper" style="min-height: auto; padding: 1rem 0;">
+    <div class="card" style="width: 100%; max-width: 760px; padding: 1.5rem 1.75rem;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-money-bill-transfer text-gold"></i> Admin Cash Withdrawer</span>
+            <small class="badge badge-admin">Operational</small>
+        </div>
+        
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Use the withdrawal options to log cash withdrawal requests for customer accounts.
+        </p>
+        
+        <form action="{{ url_for('admin.withdraw') }}" method="POST">
+            <input type="hidden" id="withdrawal_method" name="withdrawal_method" value="Withdrawal Slip">
+
+            <div class="form-group">
+                <label for="account_number" class="form-label">CUSTOMER ACCOUNT NUMBER</label>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end;">
+                    <input type="text" id="account_number" name="account_number" class="form-control numeric-only" placeholder="e.g. 100" value="{{ prefill_acc }}" required {% if prefill_acc %}autofocus{% else %}autofocus{% endif %}>
+                    <button type="button" id="admin-account-lookup" class="btn-outline" style="padding: 0.85rem 1rem;">Lookup</button>
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Enter the account number first to load balance and withdrawal options.</small>
+                <div id="admin-lookup-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--danger); display: none;"></div>
+            </div>
+
+            <div id="admin-withdraw-details" class="hidden">
+                <div class="withdraw-summary" style="margin-bottom: 1rem;">
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Customer Account</span>
+                        <strong style="color:var(--text-primary);"><span id="admin-account-number-display">{{ prefill_acc or 'N/A' }}</span></strong>
+                    </div>
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Customer Name</span>
+                        <strong style="color:var(--text-primary);"><span id="admin-account-name">-</span></strong>
+                    </div>
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Balance</span>
+                        <strong style="color:var(--text-primary);">₹<span id="admin-account-balance">0.00</span></strong>
+                    </div>
+                </div>
+
+                <div class="withdraw-tabs" role="tablist" aria-label="Withdrawal methods">
+                    <button type="button" class="tab-button active" data-tab="slip" data-method="Withdrawal Slip">Withdrawal Slip</button>
+                    <button type="button" class="tab-button" data-tab="passbook" data-method="Passbook">Passbook</button>
+                    <button type="button" class="tab-button" data-tab="cheque" data-method="Self Cheque">Self Cheque</button>
+                </div>
+
+                <div class="tab-panel active" id="tab-slip" style="margin-bottom:1rem;">
+                    <p style="margin:0; color: var(--text-secondary);">Log the withdrawal using a bank withdrawal slip for branch processing.</p>
+                </div>
+                <div class="tab-panel" id="tab-passbook" style="margin-bottom:1rem;">
+                    <p style="margin:0; color: var(--text-secondary);">Record the withdrawal through the customer's passbook verification.</p>
+                </div>
+                <div class="tab-panel" id="tab-cheque" style="margin-bottom:1rem;">
+                    <p style="margin:0; color: var(--text-secondary);">Use a self cheque option for a cheque-based withdrawal request.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount" class="form-label">WITHDRAWAL AMOUNT (₹)</label>
+                    <input type="number" id="amount" name="amount" class="form-control" placeholder="0.00" min="0.01" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="remarks" class="form-label">REMARKS</label>
+                    <input type="text" id="remarks" name="remarks" class="form-control" placeholder="Optional note for the request">
+                </div>
+
+                <div class="form-group">
+                    <label for="pin" class="form-label">ADMIN PIN</label>
+                    <input type="password" id="pin" name="pin" class="form-control numeric-only" placeholder="Enter admin PIN if required" minlength="4" maxlength="8">
+                </div>
+
+                <div class="btn-group">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn-outline" style="flex: 1; border-color: var(--text-muted); color: var(--text-muted);">Cancel</a>
+                    <button type="submit" class="btn-primary" style="flex: 2;">Execute Withdrawal</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

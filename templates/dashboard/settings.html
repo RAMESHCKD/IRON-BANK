@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('customer.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Account
+    </a>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Profile Card Form -->
+    <div class="card">
+        <div class="card-title">
+            <span><i class="fa-solid fa-user-gear text-accent"></i> Update Contact Profile</span>
+        </div>
+        
+        <form action="{{ url_for('customer.settings') }}" method="POST">
+            <input type="hidden" name="action" value="update_profile">
+            
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-control numeric-only" 
+                       placeholder="Phone number" value="{{ user.phone }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" 
+                       placeholder="email@domain.com" value="{{ user.email }}" required>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Required for sending OTP security credentials.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="address" class="form-label">Residential Address</label>
+                <textarea id="address" name="address" class="form-control" rows="3" 
+                          placeholder="Your residential address">{{ user.address or '' }}</textarea>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0.6rem 1.5rem;">
+                    Save Profile Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Password Card Form -->
+    <div class="card">
+        <div class="card-title">
+            <span><i class="fa-solid fa-key text-gold"></i> Change Access Password</span>
+        </div>
+        
+        <form action="{{ url_for('customer.settings') }}" method="POST">
+            <input type="hidden" name="action" value="change_password">
+            
+            <div class="form-group">
+                <label for="old_password" class="form-label">Current Password</label>
+                <input type="password" id="old_password" name="old_password" class="form-control" 
+                       placeholder="Enter current password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password" class="form-label">New Password</label>
+                <input type="password" id="new_password" name="new_password" class="form-control" 
+                       placeholder="At least 6 characters" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
+                       placeholder="Re-enter new password" required>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0.6rem 1.5rem; background: linear-gradient(90deg, var(--gold) 0%, #d4af37 100%); color: var(--bg-primary);">
+                    Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

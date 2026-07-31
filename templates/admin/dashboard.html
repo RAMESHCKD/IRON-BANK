@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+    .admin-page-header {
+        gap: 1.5rem;
+    }
+
+    .admin-page-header-copy {
+        min-width: 0;
+    }
+
+    .admin-page-header-copy h2 {
+        margin-bottom: 0.35rem;
+    }
+
+    .admin-page-header-copy p {
+        margin-bottom: 0;
+    }
+
+    .admin-header-actions {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .admin-header-actions a {
+        display: inline-flex;
+        width: auto;
+        min-height: 2.5rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+        .admin-page-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .admin-header-actions {
+            width: 100%;
+        }
+
+        .admin-header-actions a {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page-header mb-2 d-flex justify-between align-center">
+    <div class="admin-page-header-copy">
+        <h2>System Control Panel</h2>
+        <p class="text-secondary">IronBank system analytics and administration hub.</p>
+    </div>
+    <div class="admin-header-actions">
+        <a href="{{ url_for('admin.customers') }}" class="btn-outline btn-sm">
+            <i class="fa-solid fa-users"></i> Customers
+        </a>
+        <a href="{{ url_for('admin.add_customer') }}" class="btn-primary btn-sm">
+            <i class="fa-solid fa-user-plus"></i> Add New Customer
+        </a>
+    </div>
+</div>
+
+<!-- Stats Indicators -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Accounts</div>
+        <div class="stat-value">{{ total_customers }}</div>
+        <div class="stat-note">Active IronBank Customers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Current Accounts</div>
+        <div class="stat-value text-accent">₹{{ current_account_total|round(2)|string }}</div>
+        <div class="stat-note">Sum of current account balances</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Savings Accounts</div>
+        <div class="stat-value text-gold">₹{{ savings_account_total|round(2)|string }}</div>
+        <div class="stat-note">Sum of savings account balances</div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-clock-rotate-left text-gold"></i> Recent Transactions</span>
+        </div>
+        {% if recent_transactions %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Account</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                    <tr>
+                        <td>{{ (tx.date_time|local_datetime).strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ tx.account_number }}</td>
+                        <td>{{ tx.transaction_type }}</td>
+                        <td>₹{{ "%.2f"|format(tx.amount) }}</td>
+                        <td>₹{{ "%.2f"|format(tx.balance_after_transaction) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No recent transactions to display.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

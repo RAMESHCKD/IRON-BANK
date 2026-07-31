@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Withdraw Money{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('customer.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Account
+    </a>
+</div>
+
+<div class="auth-wrapper" style="min-height: auto; padding: 2rem 0;">
+    <div class="card" style="width: 100%; max-width: 560px;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-arrow-up-long text-gold"></i> Withdraw Funds</span>
+            <small class="badge badge-customer">Verified Session</small>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Select a withdrawal method and complete the request from your account balance.
+        </p>
+
+        <div class="withdraw-summary">
+            <div>
+                <span class="text-muted">Available Balance</span>
+                <strong>₹{{ "%.2f"|format(user.balance) }}</strong>
+            </div>
+            <div>
+                <span class="text-muted">Account Number</span>
+                <strong>{{ user.account_number }}</strong>
+            </div>
+        </div>
+
+        <form action="{{ url_for('customer.withdraw') }}" method="POST">
+            <input type="hidden" id="withdrawal_method" name="withdrawal_method" value="Withdrawal Slip">
+
+            <div class="withdraw-tabs" role="tablist" aria-label="Withdrawal methods">
+                <button type="button" class="tab-button active" data-tab="slip" data-method="Withdrawal Slip">Withdrawal Slip</button>
+                <button type="button" class="tab-button" data-tab="passbook" data-method="Passbook">Passbook</button>
+                <button type="button" class="tab-button" data-tab="cheque" data-method="Self Cheque">Self Cheque</button>
+            </div>
+
+            <div class="tab-panel active" id="tab-slip">
+                <p>Use a bank withdrawal slip for instant cash withdrawal from branch counters.</p>
+            </div>
+            <div class="tab-panel" id="tab-passbook">
+                <p>Use the passbook method for branch-based withdrawal verification.</p>
+            </div>
+            <div class="tab-panel" id="tab-cheque">
+                <p>Use a self cheque for account-supported withdrawal requests.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="amount" class="form-label">WITHDRAWAL AMOUNT (₹)</label>
+                <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount" min="0.01" step="0.01" max="{{ user.balance }}" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="remarks" class="form-label">REMARKS</label>
+                <input type="text" id="remarks" name="remarks" class="form-control" placeholder="Optional notes for the request">
+            </div>
+
+            <div class="form-group">
+                <label for="pin" class="form-label">4-DIGIT SECURITY PIN</label>
+                <input type="password" id="pin" name="pin" class="form-control numeric-only" placeholder="Enter 4-digit PIN" minlength="4" maxlength="4" required>
+            </div>
+
+            <div class="btn-group">
+                <a href="{{ url_for('customer.dashboard') }}" class="btn-outline" style="flex: 1; border-color: var(--text-muted); color: var(--text-muted);">Cancel</a>
+                <button type="submit" class="btn-primary" style="flex: 2;">Execute Withdrawal</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

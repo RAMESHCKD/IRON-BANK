@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Load Deposits{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('admin.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="auth-wrapper" style="min-height: auto; padding: 2rem 0;">
+    <div class="card tab-card" style="width: 100%; max-width: 560px; padding: 0; overflow: hidden;">
+        <div class="tab-card-header">
+            <div class="card-title" style="margin-bottom: 0; padding: 1.5rem 1.75rem;">
+                <span><i class="fa-solid fa-money-bill-transfer text-accent"></i> Admin Cash Loader</span>
+                <small class="badge badge-admin">Operational</small>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 1.75rem 1rem;">
+                Choose deposit type, then enter the account and amount.
+            </p>
+        </div>
+        
+        <form action="{{ url_for('admin.deposit') }}" method="POST" class="tab-card-form" style="padding: 0 1.75rem 1.75rem;">
+            <input type="hidden" id="deposit_method" name="deposit_method" value="{{ selected_method if selected_method else 'Cash' }}">
+
+            <div class="form-group">
+                <label for="account_number" class="form-label">CUSTOMER ACCOUNT NUMBER</label>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end;">
+                    <input type="text" id="account_number" name="account_number" class="form-control numeric-only" 
+                           placeholder="e.g. 100" value="{{ prefill_acc }}" required autofocus>
+                    <button type="button" id="deposit-account-lookup" class="btn-outline" style="padding: 0.85rem 1rem;">Lookup</button>
+                </div>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Lookup the account before using the deposit options.</small>
+                <div id="deposit-lookup-status" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <div id="deposit-account-details" class="{% if show_details %} {% else %}hidden{% endif %}">
+                <div class="withdraw-summary" style="margin-bottom: 1rem;">
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Account</span>
+                        <strong style="color:var(--text-primary);"><span id="deposit-account-number-display">{{ deposit_account_number or prefill_acc or 'N/A' }}</span></strong>
+                    </div>
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Name</span>
+                        <strong style="color:var(--text-primary);"><span id="deposit-account-name">{{ deposit_account_name or '-' }}</span></strong>
+                    </div>
+                    <div>
+                        <span style="display:block; font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Balance</span>
+                        <strong style="color:var(--text-primary);">₹<span id="deposit-account-balance">{{ '%.2f'|format(deposit_account_balance) if deposit_account_balance is not none else '0.00' }}</span></strong>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deposit-action-panel" class="{% if show_details and show_deposit_form %} {% else %}hidden{% endif %}">
+                <div class="withdraw-tabs" role="tablist" aria-label="Deposit methods" style="margin-bottom: 1.25rem;">
+                    <button type="button" class="tab-button {% if selected_method == 'Cash' %}active{% endif %}" data-tab="cash" data-method="Cash" data-input="deposit_method">Cash</button>
+                    <button type="button" class="tab-button {% if selected_method == 'Cheque' %}active{% endif %}" data-tab="cheque" data-method="Cheque" data-input="deposit_method">Cheque</button>
+                </div>
+
+                <div class="tab-panel {% if selected_method == 'Cash' %}active{% endif %}" id="tab-cash" style="margin-bottom:1rem;">
+                    <p style="margin:0; color: var(--text-secondary);">Use cash deposit to credit the customer's account immediately.</p>
+                </div>
+                <div class="tab-panel {% if selected_method == 'Cheque' %}active{% endif %}" id="tab-cheque" style="margin-bottom:1rem;">
+                    <p style="margin:0; color: var(--text-secondary);">Use cheque deposit to record a cheque transaction for later processing.</p>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="cheque_date" class="form-label">CHEQUE DATE</label>
+                        <input type="date" id="cheque_date" name="cheque_date" class="form-control" value="{{ cheque_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="cheque_no" class="form-label">CHEQUE NUMBER</label>
+                        <input type="text" id="cheque_no" name="cheque_no" class="form-control" placeholder="Enter cheque number" value="{{ cheque_no }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount" class="form-label">DEPOSIT AMOUNT (₹)</label>
+                    <input type="number" id="amount" name="amount" class="form-control" 
+                           placeholder="0.00" min="0.01" step="0.01" required {% if not show_details %}disabled{% endif %}>
+                </div>
+                
+                <div class="btn-group">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn-outline" style="flex: 1; border-color: var(--text-muted); color: var(--text-muted);">Cancel</a>
+                    <button type="submit" id="deposit-submit" class="btn-primary {% if not show_deposit_form %}hidden{% endif %}" style="flex: 2;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Confirm Deposit
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

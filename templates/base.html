@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - IronBank</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/2830/2830284.png">
+    <!-- FontAwesome for professional banking icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar {% if not session.get('user_id') %}auth-sidebar{% endif %}">
+            <a href="/" class="nav-brand">
+                <i class="fa-solid fa-building-columns"></i> IRON<span>BANK</span>
+            </a>
+            
+            {% if session.get('user_id') %}
+            <div class="sidebar-user-info">
+                <i class="fa-solid fa-user"></i>
+                <div>
+                    <strong>{{ session.get('name') }}</strong>
+                    <small class="badge {% if session.get('role') == 'admin' %}badge-admin{% else %}badge-customer{% endif %}">
+                        {{ 'Administrator' if session.get('role') == 'admin' else session.get('role') }}
+                    </small>
+                </div>
+            </div>
+
+            {% if session.get('role') == 'admin' %}
+            <ul class="sidebar-nav">
+                <li><a class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+                <li><a class="{% if request.endpoint == 'admin.customers' %}active{% endif %}" href="{{ url_for('admin.customers') }}"><i class="fa-solid fa-users"></i> Customers</a></li>
+                <li><a class="{% if request.endpoint == 'admin.deposit' %}active{% endif %}" href="{{ url_for('admin.deposit') }}"><i class="fa-solid fa-arrow-down-long"></i> Deposit</a></li>
+                <li><a class="{% if request.endpoint == 'admin.withdraw' %}active{% endif %}" href="{{ url_for('admin.withdraw') }}"><i class="fa-solid fa-arrow-up-long"></i> Withdraw</a></li>
+                <li><a class="{% if request.endpoint == 'admin.audit_transactions' %}active{% endif %}" href="{{ url_for('admin.audit_transactions') }}"><i class="fa-solid fa-list-check"></i> Audit Logs</a></li>
+            </ul>
+            {% endif %}
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('auth.logout') }}" class="btn-nav-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </div>
+            {% else %}
+            {% endif %}
+        </aside>
+
+        <div class="main-shell">
+            {% if not session.get('user_id') %}
+            <nav class="public-navbar">
+                <a href="{{ url_for('auth.login') }}" class="nav-brand">
+                    <i class="fa-solid fa-building-columns"></i> IRON<span>BANK</span>
+                </a>
+                <span class="public-navbar-status"><i class="fa-solid fa-shield-halved"></i> Secure Administrator Access</span>
+            </nav>
+            {% endif %}
+            <main class="main-content">
+                <!-- Flash Message Alerts -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="alerts-container">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% elif category == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                                
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+
+            <footer class="footer">
+                <p>&copy; {{ now.year if now else 2026 }} 🏦 <span>IronBank</span> Online Banking Portal. All rights reserved.</p>
+                <p style="margin-top: 0.5rem; font-size: 0.75rem;">Developed by Ramesh Choudhary &bull; College Project Prototype</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Main Client Script -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

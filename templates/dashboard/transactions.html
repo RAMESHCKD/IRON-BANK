@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Account Statement{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('customer.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Account
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <span><i class="fa-solid fa-history text-accent"></i> Complete Account Statement</span>
+        <span class="badge badge-customer">Acc: {{ user.account_number }}</span>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        <p>Current balance on record: <strong class="text-accent" style="font-size: 1.1rem;">₹{{ "%.2f"|format(user.balance) }}</strong></p>
+    </div>
+    
+    {% if transactions %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date & Time (UTC)</th>
+                    <th>Transaction Type</th>
+                    <th>Reference</th>
+                    <th>Operation Amount</th>
+                    <th>Resulting Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.date_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <span class="badge {% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}badge-deposit{% else %}badge-withdraw{% endif %}">
+                            {{ tx.transaction_type }}
+                        </span>
+                    </td>
+                    <td>TXN-{{ tx.id }}</td>
+                    <td>
+                        <strong class="{% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}text-accent{% else %}text-gold{% endif %}">
+                            {% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}+{% else %}-{% endif %}₹{{ "%.2f"|format(tx.amount) }}
+                        </strong>
+                    </td>
+                    <td><strong>₹{{ "%.2f"|format(tx.balance_after_transaction) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-center text-muted" style="padding: 2rem 0;">You have not made any transactions yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

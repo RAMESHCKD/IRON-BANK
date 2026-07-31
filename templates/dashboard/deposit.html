@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Deposit Money{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{{ url_for('customer.dashboard') }}" class="text-accent" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Back to My Account
+    </a>
+</div>
+
+<div class="auth-wrapper" style="min-height: auto; padding: 2rem 0;">
+    <div class="card" style="width: 100%; max-width: 420px;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-arrow-down-long text-success"></i> Customer Deposit</span>
+            <small class="badge badge-customer">Verified Session</small>
+        </div>
+        
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+            Deposit funds directly into your account. Please confirm with your 4-digit transaction PIN.
+        </p>
+        
+        <form action="{{ url_for('customer.deposit') }}" method="POST">
+            <div class="form-group">
+                <label for="amount" class="form-label">DEPOSIT AMOUNT (₹)</label>
+                <input type="number" id="amount" name="amount" class="form-control" 
+                       placeholder="Enter amount" min="0.01" step="0.01" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="pin" class="form-label">4-DIGIT SECURITY PIN</label>
+                <input type="password" id="pin" name="pin" class="form-control numeric-only" 
+                       placeholder="Enter 4-digit PIN" minlength="4" maxlength="4" required>
+            </div>
+            
+            <div class="btn-group">
+                <a href="{{ url_for('customer.dashboard') }}" class="btn-outline" style="flex: 1; border-color: var(--text-muted); color: var(--text-muted);">Cancel</a>
+                <button type="submit" class="btn-primary" style="flex: 2;">
+                    <i class="fa-solid fa-plus-circle"></i> Submit Deposit
+                </button>
+            </div>
+        </form>
+        
+        <div style="margin-top: 1rem; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
+            <p><i class="fa-solid fa-circle-info"></i> Demo Customer PIN: <strong>1234</strong></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

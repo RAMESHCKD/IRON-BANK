@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <h2>Welcome back, {{ user.name }}</h2>
+    <p class="text-secondary" style="font-size: 0.9rem;">IronBank Online Core Account Control Center</p>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Main Info Column -->
+    <div>
+        <!-- Account Card -->
+        <div class="card mb-2" style="background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(23, 42, 69, 0.4) 100%);">
+            <div class="card-title">
+                <span><i class="fa-solid fa-wallet text-accent"></i> Account Liquidity</span>
+                <span class="badge badge-customer">Active</span>
+            </div>
+            
+            <div style="margin: 1.5rem 0; text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Available Balance</p>
+                <h1 style="font-size: 3rem; color: var(--text-primary); font-weight: 700; text-shadow: 0 0 10px rgba(100,255,218,0.2);">
+                    ₹{{ "%.2f"|format(user.balance) }}
+                </h1>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; font-size: 0.9rem;">
+                <div>
+                    <span style="color: var(--text-muted); display: block; font-size: 0.75rem; text-transform: uppercase;">Account Number</span>
+                    <strong class="text-accent" style="font-size: 1.1rem;">{{ user.account_number }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); display: block; font-size: 0.75rem; text-transform: uppercase;">Registered Phone</span>
+                    <strong class="text-primary">{{ user.phone }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="card">
+            <div class="card-title">
+                <span><i class="fa-solid fa-bolt text-gold"></i> Quick Operations</span>
+            </div>
+            <div style="display: grid; gap: 0.75rem;">
+                <a href="{{ url_for('customer.withdraw') }}" class="btn-primary text-center" style="display: flex; flex-direction: column; align-items: center; padding: 1rem; gap: 0.4rem; text-shadow: none; font-weight: 600; background: linear-gradient(135deg, #2563eb 0%, #1d70b8 100%);">
+                    <i class="fa-solid fa-arrow-up-long" style="font-size: 1.3rem;"></i>
+                    Withdraw Funds
+                </a>
+                <a href="{{ url_for('customer.transfer') }}" class="btn-primary text-center" style="display: flex; flex-direction: column; align-items: center; padding: 1rem; gap: 0.4rem; text-shadow: none; font-weight: 600; background: linear-gradient(135deg, var(--accent) 0%, #1d70b8 100%);">
+                    <i class="fa-solid fa-paper-plane" style="font-size: 1.3rem;"></i>
+                    Transfer Funds / Send Money
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Profile & Recent Activity Column -->
+    <div>
+        <!-- Profile Card -->
+        <div class="card profile-card mb-2">
+            <div class="avatar-circle">
+                {{ user.name[0] | upper if user.name else 'U' }}
+            </div>
+            <h3>{{ user.name }}</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Customer Member since {{ user.created_at.strftime('%Y') }}</p>
+            
+            <div style="width: 100%; text-align: left; font-size: 0.85rem; border-top: 1px solid var(--border-color); padding-top: 1rem; color: var(--text-secondary);">
+                <p style="margin-bottom: 0.5rem;"><i class="fa-solid fa-envelope text-accent"></i> {{ user.email }}</p>
+                {% if user.address %}
+                <p><i class="fa-solid fa-location-dot text-accent"></i> {{ user.address }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent transactions -->
+        <div class="card">
+            <div class="card-title" style="margin-bottom: 1rem;">
+                <span><i class="fa-solid fa-clock-rotate-left text-accent"></i> Recent Activity</span>
+            </div>
+            
+            {% if recent_transactions %}
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
+                    {% for tx in recent_transactions %}
+                    <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5rem;">
+                        <div>
+                            <span class="badge {% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}badge-deposit{% else %}badge-withdraw{% endif %}" style="padding: 0.15rem 0.35rem; font-size: 0.65rem;">
+                                {{ tx.transaction_type }}
+                            </span>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">{{ tx.date_time.strftime('%b %d, %H:%M') }}</div>
+                        </div>
+                        <strong class="{% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}text-accent{% else %}text-gold{% endif %}">
+                            {% if tx.transaction_type == 'Deposit' or tx.transaction_type.startswith('Transfer from') %}+{% else %}-{% endif %}₹{{ "%.2f"|format(tx.amount) }}
+                        </strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="{{ url_for('customer.transactions') }}" style="font-size: 0.8rem;">View Full Account Statement</a>
+                </div>
+            {% else %}
+                <p class="text-center text-muted" style="font-size: 0.8rem; padding: 1rem 0;">No transaction records found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
