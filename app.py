@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from flask import Flask, redirect, url_for, session
+from flask import Flask, redirect, url_for, session , flash
 from sqlalchemy import inspect, text
 from config import Config
 from models.db_models import db, User, Cheque
@@ -125,8 +125,10 @@ def create_app():
         db.session.commit()
         
     return app
+# Create app for Gunicorn
+app = create_app()
 
 if __name__ == '__main__':
-    app = create_app()
+    
     # Run the server on localhost port 5000
     app.run(debug=True, host='127.0.0.1', port=5000)
