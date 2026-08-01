@@ -1,100 +1,125 @@
 # IronBank Banking Application
 
-IronBank is a Flask-based banking administration application. It provides an administrator with tools to manage customer records, balances, transactions, KYC information, cheque books, and cheque status. Customer-facing login and dashboard routes are disabled in the current version.
+IronBank is a Flask-based banking admin portal built for managing customer accounts, transactions, KYC validation, and cheque operations. The current version is focused on administrator workflows and includes email-based OTP login for secure access.
 
-## Current Features
+## Current Status
 
-### Administrator access
+- Admin login is enabled and secured with email OTP verification.
+- Customer login and customer dashboard routes are intentionally disabled in the current build.
+- The application seeds a default admin account automatically on startup.
+- SQLite is used for persistence, with automatic table and profile-column updates on app startup.
 
-- Login with password and email OTP verification.
-- Dashboard with account statistics and recent transactions.
-- Add customer records with PAN validation.
-- Customer lookup by account number or user ID.
-- Customer summary with balance, contact information, and KYC status.
-- Deposit and withdrawal processing.
-- Transaction audit logs.
-- KYC and C-KYC management.
-- AKYC number generation after valid PAN submission.
-- PAN values are uppercase and validated as `ABCDE1234F`.
-- PAN editing is allowed only when KYC is rejected.
-- Cheque-book request and cancellation management.
-- Cheque lookup by cheque number.
-- Cheque statuses: `Unused`, `Used`, `Passed`, and `Blocked`.
-- PDF download for filtered customer transactions, statements, and passbook views.
+## Core Features
 
-Customer records remain in the database for administrator management, but customer-side login and dashboard access are not enabled.
+### Administrator Dashboard
 
-## Technology
+- Secure admin login with user ID + password + OTP verification
+- Dashboard summary cards for customer count, account totals, and recent transactions
+- Recent transaction activity feed
+- Quick access to managing customer records and banking operations
+
+### Customer Management
+
+- Add new customer profiles with validation for name, phone, email, address, and PAN
+- Search customers by account number or user ID
+- View selected customer profile details and account history
+- Update customer records such as name, email, contact, user ID, and PIN
+- Track customer balances centrally from the admin panel
+
+### KYC and Profile Controls
+
+- PAN validation in the format ABCDE1234F
+- Auto-generation of CKYC and AKYC identifiers
+- KYC status tracking with Pending / Approved / Rejected states
+- Restricts PAN edits unless KYC was previously rejected
+- Customer profile data is stored in the database for admin-side review and updates
+
+### Deposit and Withdrawal
+
+- Cash deposit processing
+- Cheque deposit processing with cheque number and date validation
+- Withdrawal checks against available balance
+- Automatic transaction logging with running balances
+
+### Cheque Management
+
+- Cheque lookup by cheque number
+- Cheque statuses: Unused, Used, Passed, Blocked
+- Cheque book request and cancel request handling for a customer
+- Admin can mark cheques as passed or blocked
+
+### Audit and Reporting
+
+- Transaction audit log page
+- Customer transaction history views
+- Dashboard totals and recent activity monitoring
+- Admin can clear transaction logs from the dashboard panel
+
+## Tech Stack
 
 - Python 3
 - Flask 3
 - Flask-SQLAlchemy
 - SQLite
-- Jinja templates
+- Jinja2 templates
 - HTML, CSS, and JavaScript
-- `python-dotenv`
+- python-dotenv
 - Werkzeug password hashing
-- SMTP for OTP delivery
+- SMTP email delivery for OTP messages
 
 ## Project Structure
 
 ```text
 Banking Application/
-|-- app.py                         Application factory and database setup
-|-- config.py                      Environment and SQLite configuration
-|-- requirements.txt               Python dependencies
-|-- .env.example                   SMTP configuration template
-|-- models/
-|   `-- db_models.py                User, Transaction, Cheque, and OTP models
-|-- routes/
-|   |-- auth.py                     Login, OTP, and logout routes
-|   |-- admin.py                    Administrator routes
-|   `-- customer.py                 Retained legacy customer routes, not registered
-|-- templates/
-|   |-- base.html                   Shared authenticated layout and public navbar
-|   |-- login.html                  Administrator login
-|   |-- otp.html                    OTP verification
-|   `-- admin/                      Administrator screens
-|-- static/
-|   |-- css/style.css               Application styling
-|   `-- js/main.js                  Shared browser behavior
-`-- database/banking.db             SQLite database created by the application
+├── app.py                    # Flask app setup and DB bootstrapping
+├── config.py                 # Environment settings and SQLite configuration
+├── Readme.md                 # Project documentation
+├── requirements.txt          # Python dependencies
+├── .env                      # Local environment config (not committed)
+├── database/
+│   └── banking.db            # SQLite database file
+├── models/
+│   └── db_models.py          # SQLAlchemy models for User, Transaction, Cheque, OTP
+├── routes/
+│   ├── auth.py               # Login, OTP, resend OTP, logout
+│   └── admin.py              # Admin dashboard and payment/records management
+├── static/
+│   ├── css/
+│   │   └── style.css         # App styling
+│   └── js/
+│       └── main.js           # Shared frontend scripting
+├── templates/
+│   ├── base.html             # Shared layout
+│   ├── login.html            # Admin login page
+│   ├── otp.html              # OTP verification page
+│   └── admin/
+│       ├── dashboard.html
+│       ├── add_customer.html
+│       ├── customers.html
+│       ├── deposit.html
+│       ├── withdraw.html
+│       ├── edit_customer.html
+│       ├── transactions.html
+│       └── ...
+└── .venv/                    # Local virtual environment (optional)
 ```
 
 ## Installation
 
-Create and activate a virtual environment:
+1. Create and activate a virtual environment:
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+2. Install dependencies:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-Start the application:
-
-```powershell
-python app.py
-```
-
-Open `http://127.0.0.1:5000` in a browser.
-
-The application creates `database/banking.db` automatically and creates or updates the required tables and profile columns on startup.
-
-## SMTP OTP Configuration
-
-Copy `.env.example` to `.env` and replace the placeholders:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Example Gmail configuration:
+3. Create a local environment file named `.env` in the project root:
 
 ```env
 SECRET_KEY=replace-with-a-long-random-secret
@@ -105,100 +130,137 @@ MAIL_USERNAME=your-gmail-address@gmail.com
 MAIL_PASSWORD=your-16-character-google-app-password
 ```
 
-Use a Google App Password, not the normal Gmail password. The Gmail account must have two-step verification enabled before an App Password can be created.
+4. Start the application:
 
-The OTP is stored temporarily in the `otps` table and is sent to the administrator email address. The OTP is not displayed in the browser or in application flash messages.
+```powershell
+python app.py
+```
 
-Never commit `.env` or expose `MAIL_PASSWORD` in source control. The repository `.gitignore` excludes `.env`.
+5. Open the app in a browser:
+
+```text
+http://127.0.0.1:5000
+```
+
+## SMTP and OTP Configuration
+
+- The OTP email is sent using Gmail SMTP settings from the `.env` file.
+- Use a Google App Password instead of your normal Gmail password.
+- SMTP credentials are required for OTP delivery to work correctly.
+- If credentials are missing or invalid, the app will fall back to a warning message and the OTP cannot be delivered.
+
+> Do not commit `.env` or expose your email password in source control.
 
 ## Authentication Flow
 
 ```text
-Administrator enters user ID and password
-      |
-Password is verified
-      |
+Admin enters User ID and password
+        |
+Password validated
+        |
 OTP is generated and emailed
-      |
-Administrator enters the OTP
-      |
-Administrator dashboard
+        |
+Admin verifies OTP
+        |
+Admin dashboard is opened
 ```
 
-The login page uses a public top navbar. Authenticated administrator pages use the administrator sidebar and highlight the current navigation item.
+## Default Admin Account
 
-## Database Tables
+The application seeds a default administrator automatically on first run:
+
+- User ID: admin
+- Password: admin@2118
+- Email: cbs80200@gmail.com
+
+This default account is intended for local development/testing and should be updated in production deployments.
+
+## Database Design
 
 ### `users`
 
-Stores administrator and customer records, including account number, balance, contact details, password hash, PAN, C-KYC, AKYC, KYC status, and cheque-book request status.
+Stores admin and customer data including:
+
+- user ID and account number
+- full name and contact info
+- password hash
+- PIN for customer-level operations
+- balance
+- role
+- PAN, AKYC, CKYC
+- KYC status
+- cheque book request status
 
 ### `transactions`
 
-Stores deposits and withdrawals with account number, transaction type, amount, resulting balance, and timestamp.
+Stores all transaction events including:
+
+- account number
+- transaction type
+- amount
+- resulting balance
+- timestamp
 
 ### `cheques`
 
-Stores cheque number, account number, customer name, amount, issue date, status, and remarks.
+Stores cheque details such as:
+
+- cheque number
+- account number
+- customer name
+- amount
+- issue date
+- status
+- remarks
 
 ### `otps`
 
-Stores the temporary OTP email, code, expiration time, and whether the OTP was verified. OTP records should be treated as sensitive data.
+Stores short-lived OTP data used during login verification, including:
 
-## Default Administrator
+- email
+- generated code
+- expiry timestamp
+- verified flag
 
-The application ensures an administrator record exists with user ID `admin`. The current password and email are configured by the startup seed/update logic and should be changed for any real deployment.
+## Notes
 
-This project is intended for educational and local development use. It is not production banking software.
+- The project is built for educational and local development use.
+- It is not a production-grade banking system.
+- Customer-side banking flows are intentionally disabled in this version, although the customer model and data remain in the database.
 
-## 📖 Future Enhancements
+## Future Improvements
 
-- Money Transfer
-- Fund Transfer Between Accounts
-- Beneficiary Management
-- Debit Card Management
-- Account Statements (PDF)
-- Profile Picture Upload
-- Dark Mode
-- SMS OTP
-- Two-Factor Authentication
-- Admin Analytics Dashboard
-- MySQL Support
-- Docker Deployment
+Potential enhancements for the project include:
 
----
+- Fund transfers between accounts
+- Beneficiary management
+- Debit card management
+- PDF account statements
+- Profile picture upload
+- Dark mode
+- SMS OTP support
+- Enhanced two-factor authentication
+- Better analytics dashboard
+- MySQL migration
+- Docker deployment
 
-## 🎯 Learning Outcomes
+## Learning Outcomes
 
 This project demonstrates:
 
-- Object-Oriented Programming (OOP)
-- Flask Web Development
-- RESTful Routing
-- Database Design
-- Authentication & Authorization
-- Email OTP Verification
-- Session Management
-- Password Hashing
-- Frontend Development
-- CRUD Operations
-- MVC Project Structure
-- Full-Stack Development
+- Flask web application development
+- Database modeling with SQLAlchemy
+- Role-based authentication flows
+- Password hashing and session management
+- Email OTP verification
+- Frontend templating with Jinja
+- CRUD operations and admin workflows
+- Full-stack application structure
 
----
+## Developer
 
-## 👨‍💻 Developed By
+Developed by Ramesh Choudhary as a banking application project using Python and Flask.
 
-**Ramesh Choudhary**
+## License
 
-**Project:** Banking Application (IronBank)
-
-Developed as a college project to demonstrate full-stack web development using Python Flask and modern web technologies.
-
----
-
-## 📄 License
-
-This project is developed for educational purposes only.
-
-It is not intended for production or real-world banking use.
+This project is intended for educational use only and is not suitable for real-world banking deployment.
